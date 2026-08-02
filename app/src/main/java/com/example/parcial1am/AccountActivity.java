@@ -14,10 +14,12 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class AccountActivity extends AppCompatActivity {
 
     private FirebaseAuth firebaseAuth;
+    private FirebaseFirestore firestore;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,9 +34,13 @@ public class AccountActivity extends AppCompatActivity {
         });
 
         firebaseAuth = FirebaseAuth.getInstance();
+        firestore = FirebaseFirestore.getInstance();
 
         TextView userEmailText = findViewById(R.id.userEmailText);
         TextView logoutButton = findViewById(R.id.logoutButton);
+        TextView userNameText = findViewById(R.id.userNameText);
+        TextView userPhoneText = findViewById(R.id.userPhoneText);
+        TextView userAddressText = findViewById(R.id.userAddressText);
 
         View navShop = findViewById(R.id.navShop);
         View navExplore = findViewById(R.id.navExplore);
@@ -43,10 +49,13 @@ public class AccountActivity extends AppCompatActivity {
 
         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
 
-        if (currentUser != null && currentUser.getEmail() != null) {
-            userEmailText.setText(currentUser.getEmail());
+        if (currentUser != null) {
+            loadUserProfile(currentUser, userEmailText, userNameText, userPhoneText, userAddressText);
         } else {
             userEmailText.setText(R.string.account_no_user);
+            userNameText.setText("Nombre: -");
+            userPhoneText.setText("Teléfono: -");
+            userAddressText.setText("Dirección: -");
         }
 
         logoutButton.setOnClickListener(v -> {
@@ -75,5 +84,70 @@ public class AccountActivity extends AppCompatActivity {
         navFavorites.setOnClickListener(v ->
                 Toast.makeText(this, "Favoritos próximamente", Toast.LENGTH_SHORT).show()
         );
+    }
+
+    private void loadUserProfile(
+            FirebaseUser currentUser,
+            TextView userEmailText,
+            TextView userNameText,
+            TextView userPhoneText,
+            TextView userAddressText
+    ) {
+        firestore.collection("users")
+                .document(currentUser.getUid())
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        String email = documentSnapshot.getString("email");
+                        String name = documentSnapshot.getString("name");
+                        String phone = documentSnapshot.getString("phone");
+                        String address = documentSnapshot.getString("address");
+
+                        if (email != null && !email.isEmpty()) {
+                            userEmailText.setText(email);
+                        } else if (currentUser.getEmail() != null) {
+                            userEmailText.setText(currentUser.getEmail());
+                        } else {
+                            userEmailText.setText(R.string.account_no_user);
+                        }
+
+                        userNameText.setText("Nombre: " + getVisibleValue(name));
+                        userPhoneText.setText("Teléfono: " + getVisibleValue(phone));
+                        userAddressText.setText("Dirección: " + getVisibleValue(address));
+                    } else {
+                        if (currentUser.getEmail() != null) {
+                            userEmailText.setText(currentUser.getEmail());
+                        } else {
+                            userEmailText.setText(R.string.account_no_user);
+                        }
+
+                        userNameText.setText("Nombre: -");
+                        userPhoneText.setText("Teléfono: -");
+                        userAddressText.setText("Dirección: -");
+
+                        Toast.makeText(this, "No se encontraron datos del usuario", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(error -> {
+                    if (currentUser.getEmail() != null) {
+                        userEmailText.setText(currentUser.getEmail());
+                    } else {
+                        userEmailText.setText(R.string.account_no_user);
+                    }
+
+                    userNameText.setText("Nombre: -");
+                    userPhoneText.setText("Teléfono: -");
+                    userAddressText.setText("Dirección: -");
+
+                    Toast.makeText(this, "No se pudieron cargar los datos del usuario", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private String getVisibleValue(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return "-";
+        }
+
+        return value;
     }
 }
