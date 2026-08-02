@@ -17,11 +17,17 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthUserCollisionException;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class LoginActivity extends AppCompatActivity {
 
     private boolean isPasswordVisible = false;
     private FirebaseAuth firebaseAuth;
+    private FirebaseFirestore firestore;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +36,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         firebaseAuth = FirebaseAuth.getInstance();
+        firestore = FirebaseFirestore.getInstance();
 
         if (firebaseAuth.getCurrentUser() != null) {
             goToExplore();
@@ -77,8 +84,14 @@ public class LoginActivity extends AppCompatActivity {
             firebaseAuth.createUserWithEmailAndPassword(email, password)
                     .addOnCompleteListener(this, task -> {
                         if (task.isSuccessful()) {
-                            Toast.makeText(this, "Cuenta creada correctamente", Toast.LENGTH_SHORT).show();
-                            goToExplore();
+                            FirebaseUser user = firebaseAuth.getCurrentUser();
+
+                            if (user != null) {
+                                createUserDocument(user);
+                            } else {
+                                Toast.makeText(this, "Cuenta creada correctamente", Toast.LENGTH_SHORT).show();
+                                goToExplore();
+                            }
                         } else if (task.getException() instanceof FirebaseAuthUserCollisionException) {
                             Toast.makeText(this, "El correo ya está registrado. Iniciá sesión.", Toast.LENGTH_SHORT).show();
                         } else {
@@ -118,6 +131,27 @@ public class LoginActivity extends AppCompatActivity {
         }
 
         return true;
+    }
+
+    private void createUserDocument(FirebaseUser user) {
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("email", user.getEmail());
+        userData.put("name", "");
+        userData.put("phone", "");
+        userData.put("address", "");
+        userData.put("createdAt", System.currentTimeMillis());
+
+        firestore.collection("users")
+                .document(user.getUid())
+                .set(userData)
+                .addOnSuccessListener(unused -> {
+                    Toast.makeText(this, "Cuenta creada correctamente", Toast.LENGTH_SHORT).show();
+                    goToExplore();
+                })
+                .addOnFailureListener(error -> {
+                    Toast.makeText(this, "Cuenta creada, pero no se pudieron guardar los datos", Toast.LENGTH_SHORT).show();
+                    goToExplore();
+                });
     }
 
     private void goToExplore() {
