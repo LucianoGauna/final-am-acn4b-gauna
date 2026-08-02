@@ -52,35 +52,61 @@
             android:textColor="@color/text_secondary"
             android:textSize="17sp" />
 
-        <TextView
-            android:id="@+id/userNameText"
+        <EditText
+            android:id="@+id/userNameEditText"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="52dp"
             android:layout_marginTop="18dp"
-            android:gravity="center"
-            android:text="Nombre: -"
+            android:background="@drawable/bg_search_input"
+            android:hint="Nombre"
+            android:inputType="textPersonName"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
             android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_secondary"
+            android:textSize="16sp" />
+
+        <EditText
+            android:id="@+id/userPhoneEditText"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_search_input"
+            android:hint="Teléfono"
+            android:inputType="phone"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_secondary"
+            android:textSize="16sp" />
+
+        <EditText
+            android:id="@+id/userAddressEditText"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_search_input"
+            android:hint="Dirección"
+            android:inputType="textPostalAddress"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_secondary"
             android:textSize="16sp" />
 
         <TextView
-            android:id="@+id/userPhoneText"
+            android:id="@+id/saveProfileButton"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="18dp"
+            android:background="@drawable/bg_primary_button"
+            android:clickable="true"
+            android:focusable="true"
             android:gravity="center"
-            android:text="Teléfono: -"
-            android:textColor="@color/text_primary"
-            android:textSize="16sp" />
-
-        <TextView
-            android:id="@+id/userAddressText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="center"
-            android:text="Dirección: -"
-            android:textColor="@color/text_primary"
-            android:textSize="16sp" />
+            android:text="Guardar cambios"
+            android:textColor="@android:color/white"
+            android:textSize="17sp"
+            android:textStyle="bold" />
 
     </LinearLayout>
 

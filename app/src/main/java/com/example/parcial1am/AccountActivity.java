@@ -3,6 +3,7 @@ package com.example.parcial1am;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -15,6 +16,9 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class AccountActivity extends AppCompatActivity {
 
@@ -38,9 +42,10 @@ public class AccountActivity extends AppCompatActivity {
 
         TextView userEmailText = findViewById(R.id.userEmailText);
         TextView logoutButton = findViewById(R.id.logoutButton);
-        TextView userNameText = findViewById(R.id.userNameText);
-        TextView userPhoneText = findViewById(R.id.userPhoneText);
-        TextView userAddressText = findViewById(R.id.userAddressText);
+        EditText userNameEditText = findViewById(R.id.userNameEditText);
+        EditText userPhoneEditText = findViewById(R.id.userPhoneEditText);
+        EditText userAddressEditText = findViewById(R.id.userAddressEditText);
+        TextView saveProfileButton = findViewById(R.id.saveProfileButton);
 
         View navShop = findViewById(R.id.navShop);
         View navExplore = findViewById(R.id.navExplore);
@@ -50,12 +55,18 @@ public class AccountActivity extends AppCompatActivity {
         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
 
         if (currentUser != null) {
-            loadUserProfile(currentUser, userEmailText, userNameText, userPhoneText, userAddressText);
+            loadUserProfile(currentUser, userEmailText, userNameEditText, userPhoneEditText, userAddressEditText);
+
+            saveProfileButton.setOnClickListener(v ->
+                    saveUserProfile(currentUser, userNameEditText, userPhoneEditText, userAddressEditText)
+            );
         } else {
             userEmailText.setText(R.string.account_no_user);
-            userNameText.setText("Nombre: -");
-            userPhoneText.setText("Teléfono: -");
-            userAddressText.setText("Dirección: -");
+            userNameEditText.setEnabled(false);
+            userPhoneEditText.setEnabled(false);
+            userAddressEditText.setEnabled(false);
+            saveProfileButton.setEnabled(false);
+            saveProfileButton.setAlpha(0.5f);
         }
 
         logoutButton.setOnClickListener(v -> {
@@ -89,9 +100,9 @@ public class AccountActivity extends AppCompatActivity {
     private void loadUserProfile(
             FirebaseUser currentUser,
             TextView userEmailText,
-            TextView userNameText,
-            TextView userPhoneText,
-            TextView userAddressText
+            EditText userNameEditText,
+            EditText userPhoneEditText,
+            EditText userAddressEditText
     ) {
         firestore.collection("users")
                 .document(currentUser.getUid())
@@ -111,9 +122,9 @@ public class AccountActivity extends AppCompatActivity {
                             userEmailText.setText(R.string.account_no_user);
                         }
 
-                        userNameText.setText("Nombre: " + getVisibleValue(name));
-                        userPhoneText.setText("Teléfono: " + getVisibleValue(phone));
-                        userAddressText.setText("Dirección: " + getVisibleValue(address));
+                        userNameEditText.setText(getEditableValue(name));
+                        userPhoneEditText.setText(getEditableValue(phone));
+                        userAddressEditText.setText(getEditableValue(address));
                     } else {
                         if (currentUser.getEmail() != null) {
                             userEmailText.setText(currentUser.getEmail());
@@ -121,9 +132,9 @@ public class AccountActivity extends AppCompatActivity {
                             userEmailText.setText(R.string.account_no_user);
                         }
 
-                        userNameText.setText("Nombre: -");
-                        userPhoneText.setText("Teléfono: -");
-                        userAddressText.setText("Dirección: -");
+                        userNameEditText.setText("");
+                        userPhoneEditText.setText("");
+                        userAddressEditText.setText("");
 
                         Toast.makeText(this, "No se encontraron datos del usuario", Toast.LENGTH_SHORT).show();
                     }
@@ -135,17 +146,44 @@ public class AccountActivity extends AppCompatActivity {
                         userEmailText.setText(R.string.account_no_user);
                     }
 
-                    userNameText.setText("Nombre: -");
-                    userPhoneText.setText("Teléfono: -");
-                    userAddressText.setText("Dirección: -");
+                    userNameEditText.setText("");
+                    userPhoneEditText.setText("");
+                    userAddressEditText.setText("");
 
                     Toast.makeText(this, "No se pudieron cargar los datos del usuario", Toast.LENGTH_SHORT).show();
                 });
     }
 
-    private String getVisibleValue(String value) {
-        if (value == null || value.trim().isEmpty()) {
-            return "-";
+    private void saveUserProfile(
+            FirebaseUser currentUser,
+            EditText userNameEditText,
+            EditText userPhoneEditText,
+            EditText userAddressEditText
+    ) {
+        String name = userNameEditText.getText().toString().trim();
+        String phone = userPhoneEditText.getText().toString().trim();
+        String address = userAddressEditText.getText().toString().trim();
+
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("name", name);
+        userData.put("phone", phone);
+        userData.put("address", address);
+        userData.put("email", currentUser.getEmail());
+
+        firestore.collection("users")
+                .document(currentUser.getUid())
+                .update(userData)
+                .addOnSuccessListener(unused ->
+                        Toast.makeText(this, "Datos actualizados correctamente", Toast.LENGTH_SHORT).show()
+                )
+                .addOnFailureListener(error ->
+                        Toast.makeText(this, "No se pudieron actualizar los datos", Toast.LENGTH_SHORT).show()
+                );
+    }
+
+    private String getEditableValue(String value) {
+        if (value == null) {
+            return "";
         }
 
         return value;
