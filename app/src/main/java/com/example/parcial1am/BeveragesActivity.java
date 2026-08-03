@@ -11,12 +11,21 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+
 public class BeveragesActivity extends AppCompatActivity {
+
+    private FirebaseFirestore firestore;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_beverages);
+
+        firestore = FirebaseFirestore.getInstance();
+        loadBeverageProductsFromFirestore();
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.beveragesRoot), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -121,5 +130,35 @@ public class BeveragesActivity extends AppCompatActivity {
         intent.putExtra(ProductDetailActivity.EXTRA_PRODUCT_DESCRIPTION, productDescription);
         intent.putExtra(ProductDetailActivity.EXTRA_PRODUCT_IMAGE, productImage);
         startActivity(intent);
+    }
+
+    private void loadBeverageProductsFromFirestore() {
+        firestore.collection("products")
+                .whereEqualTo("category", "bebidas")
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    int productsCount = queryDocumentSnapshots.size();
+
+                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                        String name = document.getString("name");
+                        Double price = document.getDouble("price");
+                        String imageName = document.getString("imageName");
+
+                        System.out.println("Producto Firestore: " + name + " - $" + price + " - " + imageName);
+                    }
+
+                    Toast.makeText(
+                            this,
+                            "Productos cargados desde Firestore: " + productsCount,
+                            Toast.LENGTH_SHORT
+                    ).show();
+                })
+                .addOnFailureListener(error ->
+                        Toast.makeText(
+                                this,
+                                "No se pudieron cargar los productos",
+                                Toast.LENGTH_SHORT
+                        ).show()
+                );
     }
 }
