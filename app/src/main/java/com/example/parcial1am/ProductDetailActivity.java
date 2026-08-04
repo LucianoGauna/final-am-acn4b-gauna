@@ -16,11 +16,13 @@ import java.util.Locale;
 
 public class ProductDetailActivity extends AppCompatActivity {
 
+    public static final String EXTRA_PRODUCT_ID = "productId";
     public static final String EXTRA_PRODUCT_NAME = "productName";
     public static final String EXTRA_PRODUCT_UNIT = "productUnit";
     public static final String EXTRA_PRODUCT_PRICE = "productPrice";
     public static final String EXTRA_PRODUCT_DESCRIPTION = "productDescription";
     public static final String EXTRA_PRODUCT_IMAGE = "productImage";
+    public static final String EXTRA_PRODUCT_IMAGE_NAME = "productImageName";
 
     private int quantity = 1;
     private double unitPrice = 0;
@@ -56,9 +58,11 @@ public class ProductDetailActivity extends AppCompatActivity {
         productPriceText = findViewById(R.id.productPriceText);
         favoriteButton = findViewById(R.id.favoriteButton);
 
+        String productId = getIntent().getStringExtra(EXTRA_PRODUCT_ID);
         String productName = getIntent().getStringExtra(EXTRA_PRODUCT_NAME);
         String productUnit = getIntent().getStringExtra(EXTRA_PRODUCT_UNIT);
         String productDescription = getIntent().getStringExtra(EXTRA_PRODUCT_DESCRIPTION);
+        String productImageName = getIntent().getStringExtra(EXTRA_PRODUCT_IMAGE_NAME);
         int productImageResId = getIntent().getIntExtra(EXTRA_PRODUCT_IMAGE, R.drawable.img_coca_cola);
 
         unitPrice = getIntent().getDoubleExtra(EXTRA_PRODUCT_PRICE, 0);
@@ -90,9 +94,21 @@ public class ProductDetailActivity extends AppCompatActivity {
             }
         });
 
-        addToCartButton.setOnClickListener(v ->
-                Toast.makeText(this, R.string.product_added_to_cart, Toast.LENGTH_SHORT).show()
-        );
+        addToCartButton.setOnClickListener(v -> {
+            Product product = new Product(
+                    productId,
+                    productName,
+                    productUnit,
+                    unitPrice,
+                    productDescription,
+                    "bebidas",
+                    productImageName
+            );
+
+            CartManager.addProduct(product, quantity);
+
+            Toast.makeText(this, R.string.product_added_to_cart, Toast.LENGTH_SHORT).show();
+        });
     }
 
     private void updatePrice() {

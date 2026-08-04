@@ -70,11 +70,13 @@ public class BeveragesActivity extends AppCompatActivity {
         }
 
         Intent intent = new Intent(BeveragesActivity.this, ProductDetailActivity.class);
+        intent.putExtra(ProductDetailActivity.EXTRA_PRODUCT_ID, product.getId());
         intent.putExtra(ProductDetailActivity.EXTRA_PRODUCT_NAME, product.getName());
         intent.putExtra(ProductDetailActivity.EXTRA_PRODUCT_UNIT, product.getUnit());
         intent.putExtra(ProductDetailActivity.EXTRA_PRODUCT_PRICE, product.getPrice());
         intent.putExtra(ProductDetailActivity.EXTRA_PRODUCT_DESCRIPTION, product.getDescription());
         intent.putExtra(ProductDetailActivity.EXTRA_PRODUCT_IMAGE, imageResId);
+        intent.putExtra(ProductDetailActivity.EXTRA_PRODUCT_IMAGE_NAME, product.getImageName());
         startActivity(intent);
     }
 

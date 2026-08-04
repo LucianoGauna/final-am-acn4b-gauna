@@ -60,13 +60,15 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
 
         holder.itemView.setOnClickListener(v -> productClickListener.onProductClick(product));
 
-        holder.addProductButton.setOnClickListener(v ->
-                Toast.makeText(
-                        holder.itemView.getContext(),
-                        R.string.product_added,
-                        Toast.LENGTH_SHORT
-                ).show()
-        );
+        holder.addProductButton.setOnClickListener(v -> {
+            CartManager.addProduct(product);
+
+            Toast.makeText(
+                    holder.itemView.getContext(),
+                    R.string.product_added,
+                    Toast.LENGTH_SHORT
+            ).show();
+        });
     }
 
     @Override
