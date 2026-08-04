@@ -14,9 +14,13 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class BeveragesActivity extends AppCompatActivity {
 
     private FirebaseFirestore firestore;
+    private List<Product> beverageProducts;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,6 +29,7 @@ public class BeveragesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_beverages);
 
         firestore = FirebaseFirestore.getInstance();
+        beverageProducts = new ArrayList<>();
         loadBeverageProductsFromFirestore();
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.beveragesRoot), (v, insets) -> {
@@ -137,19 +142,33 @@ public class BeveragesActivity extends AppCompatActivity {
                 .whereEqualTo("category", "bebidas")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                    int productsCount = queryDocumentSnapshots.size();
+                    beverageProducts.clear();
 
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                        String id = document.getId();
                         String name = document.getString("name");
+                        String unit = document.getString("unit");
                         Double price = document.getDouble("price");
+                        String description = document.getString("description");
+                        String category = document.getString("category");
                         String imageName = document.getString("imageName");
 
-                        System.out.println("Producto Firestore: " + name + " - $" + price + " - " + imageName);
+                        Product product = new Product(
+                                id,
+                                getSafeString(name),
+                                getSafeString(unit),
+                                price != null ? price : 0,
+                                getSafeString(description),
+                                getSafeString(category),
+                                getSafeString(imageName)
+                        );
+
+                        beverageProducts.add(product);
                     }
 
                     Toast.makeText(
                             this,
-                            "Productos cargados desde Firestore: " + productsCount,
+                            "Productos cargados desde Firestore: " + beverageProducts.size(),
                             Toast.LENGTH_SHORT
                     ).show();
                 })
@@ -160,5 +179,13 @@ public class BeveragesActivity extends AppCompatActivity {
                                 Toast.LENGTH_SHORT
                         ).show()
                 );
+    }
+
+    private String getSafeString(String value) {
+        if (value == null) {
+            return "";
+        }
+
+        return value;
     }
 }
