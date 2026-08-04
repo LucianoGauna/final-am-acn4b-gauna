@@ -10,6 +10,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -21,6 +23,7 @@ public class BeveragesActivity extends AppCompatActivity {
 
     private FirebaseFirestore firestore;
     private List<Product> beverageProducts;
+    private ProductAdapter productAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +33,13 @@ public class BeveragesActivity extends AppCompatActivity {
 
         firestore = FirebaseFirestore.getInstance();
         beverageProducts = new ArrayList<>();
+
+        RecyclerView productsRecyclerView = findViewById(R.id.productsRecyclerView);
+        productAdapter = new ProductAdapter(beverageProducts, this::openProductDetail);
+
+        productsRecyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+        productsRecyclerView.setAdapter(productAdapter);
+
         loadBeverageProductsFromFirestore();
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.beveragesRoot), (v, insets) -> {
@@ -41,99 +51,30 @@ public class BeveragesActivity extends AppCompatActivity {
         View backButton = findViewById(R.id.backButton);
         View filterButton = findViewById(R.id.filterButton);
 
-        View dietCokeCard = findViewById(R.id.dietCokeCard);
-        View spriteCard = findViewById(R.id.spriteCard);
-        View appleGrapeJuiceCard = findViewById(R.id.appleGrapeJuiceCard);
-        View orangeJuiceCard = findViewById(R.id.orangeJuiceCard);
-        View cocaColaCard = findViewById(R.id.cocaColaCard);
-        View pepsiCard = findViewById(R.id.pepsiCard);
-
-        View addDietCokeButton = findViewById(R.id.addDietCokeButton);
-        View addSpriteButton = findViewById(R.id.addSpriteButton);
-        View addAppleGrapeJuiceButton = findViewById(R.id.addAppleGrapeJuiceButton);
-        View addOrangeJuiceButton = findViewById(R.id.addOrangeJuiceButton);
-        View addCocaColaButton = findViewById(R.id.addCocaColaButton);
-        View addPepsiButton = findViewById(R.id.addPepsiButton);
-
         backButton.setOnClickListener(v -> finish());
 
         filterButton.setOnClickListener(v ->
                 Toast.makeText(this, "Filtros próximamente", Toast.LENGTH_SHORT).show()
         );
-
-        dietCokeCard.setOnClickListener(v -> openProductDetail(
-                getString(R.string.product_diet_coke),
-                getString(R.string.unit_can_355),
-                2500.00,
-                getString(R.string.description_diet_coke),
-                R.drawable.img_diet_coke
-        ));
-
-        spriteCard.setOnClickListener(v -> openProductDetail(
-                getString(R.string.product_sprite),
-                getString(R.string.unit_can_325),
-                2200.00,
-                getString(R.string.description_sprite),
-                R.drawable.img_sprite
-        ));
-
-        appleGrapeJuiceCard.setOnClickListener(v -> openProductDetail(
-                getString(R.string.product_apple_grape_juice),
-                getString(R.string.unit_bottle_2l),
-                1800.99,
-                getString(R.string.description_apple_grape_juice),
-                R.drawable.img_apple_grape_juice
-        ));
-
-        orangeJuiceCard.setOnClickListener(v -> openProductDetail(
-                getString(R.string.product_orange_juice),
-                getString(R.string.unit_bottle_2l),
-                1800.99,
-                getString(R.string.description_orange_juice),
-                R.drawable.img_orange_juice
-        ));
-
-        cocaColaCard.setOnClickListener(v -> openProductDetail(
-                getString(R.string.product_coca_cola),
-                getString(R.string.unit_can_355),
-                2500.00,
-                getString(R.string.description_coca_cola),
-                R.drawable.img_coca_cola
-        ));
-
-        pepsiCard.setOnClickListener(v -> openProductDetail(
-                getString(R.string.product_pepsi),
-                getString(R.string.unit_can_355),
-                2500.00,
-                getString(R.string.description_pepsi),
-                R.drawable.img_pepsi
-        ));
-
-        addDietCokeButton.setOnClickListener(v -> showProductAdded());
-        addSpriteButton.setOnClickListener(v -> showProductAdded());
-        addAppleGrapeJuiceButton.setOnClickListener(v -> showProductAdded());
-        addOrangeJuiceButton.setOnClickListener(v -> showProductAdded());
-        addCocaColaButton.setOnClickListener(v -> showProductAdded());
-        addPepsiButton.setOnClickListener(v -> showProductAdded());
     }
 
-    private void showProductAdded() {
-        Toast.makeText(this, R.string.product_added, Toast.LENGTH_SHORT).show();
-    }
+    private void openProductDetail(Product product) {
+        int imageResId = getResources().getIdentifier(
+                product.getImageName(),
+                "drawable",
+                getPackageName()
+        );
 
-    private void openProductDetail(
-            String productName,
-            String productUnit,
-            double productPrice,
-            String productDescription,
-            int productImage
-    ) {
+        if (imageResId == 0) {
+            imageResId = R.drawable.img_coca_cola;
+        }
+
         Intent intent = new Intent(BeveragesActivity.this, ProductDetailActivity.class);
-        intent.putExtra(ProductDetailActivity.EXTRA_PRODUCT_NAME, productName);
-        intent.putExtra(ProductDetailActivity.EXTRA_PRODUCT_UNIT, productUnit);
-        intent.putExtra(ProductDetailActivity.EXTRA_PRODUCT_PRICE, productPrice);
-        intent.putExtra(ProductDetailActivity.EXTRA_PRODUCT_DESCRIPTION, productDescription);
-        intent.putExtra(ProductDetailActivity.EXTRA_PRODUCT_IMAGE, productImage);
+        intent.putExtra(ProductDetailActivity.EXTRA_PRODUCT_NAME, product.getName());
+        intent.putExtra(ProductDetailActivity.EXTRA_PRODUCT_UNIT, product.getUnit());
+        intent.putExtra(ProductDetailActivity.EXTRA_PRODUCT_PRICE, product.getPrice());
+        intent.putExtra(ProductDetailActivity.EXTRA_PRODUCT_DESCRIPTION, product.getDescription());
+        intent.putExtra(ProductDetailActivity.EXTRA_PRODUCT_IMAGE, imageResId);
         startActivity(intent);
     }
 
@@ -165,6 +106,8 @@ public class BeveragesActivity extends AppCompatActivity {
 
                         beverageProducts.add(product);
                     }
+
+                    productAdapter.notifyDataSetChanged();
 
                     Toast.makeText(
                             this,
